@@ -1,3 +1,7 @@
 from django.contrib import admin
+from .models import TextingList, Client, Message
 
-# Register your models here.
+
+admin.site.register(TextingList)
+admin.site.register(Client)
+admin.site.register(Message)
