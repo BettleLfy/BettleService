@@ -10,14 +10,22 @@ class TextingList(models.Model):
     filter_operator_code = models.PositiveIntegerField()
     filter_tag = models.CharField(max_length=100)
 
+    def __str__(self):
+        return (f'{self.text[:20]} '
+                f'({self.filter_operator_code}), '
+                f'#{self.filter_tag}')
+
 
 class Client(models.Model):
     phone = models.PositiveIntegerField()
     operator_code = models.PositiveIntegerField()
     tag = models.CharField(max_length=100)
     TIMEZONES = tuple(zip(pytz.all_timezones, pytz.all_timezones))
-    timezone = models.CharField(max_length=32, choices=TIMEZONES, 
-    default='Europe/Moscow')
+    timezone = models.CharField(max_length=32, choices=TIMEZONES,
+                                default='Europe/Moscow')
+
+    def __str__(self):
+        return str(self.phone)
 
 
 class Message(models.Model):
@@ -25,7 +33,12 @@ class Message(models.Model):
     SENT = 'SENT'
     CURRENT_STATUS = [(PENDING, 'Pending'),
                       (SENT, 'Sent')]
-    textinglist = models.ForeignKey(TextingList, on_delete=models.CASCADE, related_name='messages')
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='messages')
+    textinglist = models.ForeignKey(TextingList,
+                                    on_delete=models.CASCADE,
+                                    related_name='messages')
+    client = models.ForeignKey(Client, on_delete=models.CASCADE,
+                               related_name='messages')
     created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=10, choices=CURRENT_STATUS, default=PENDING)
+    status = models.CharField(max_length=10,
+                              choices=CURRENT_STATUS,
+                              default=PENDING)
