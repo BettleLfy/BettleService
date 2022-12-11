@@ -8,14 +8,14 @@ class TextingListSerializer(serializers.ModelSerializer):
         model = TextingList
         fields = ['id', 'start_datetime', 'end_datetime',
                   'text', 'filter_operator_code', 'filter_tag']
-        
-        
+
+
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
         fields = ['id', 'phone', 'operator_code', 'tag', 'timezone']
-        
-        
+
+
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Message

@@ -7,8 +7,8 @@ class TextingList(models.Model):
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField()
     text = models.TextField()
-    filter_operator_code = models.PositiveIntegerField()
-    filter_tag = models.CharField(max_length=100)
+    filter_operator_code = models.PositiveIntegerField(blank=True, null=True)
+    filter_tag = models.CharField(blank=True, max_length=100)
 
     def __str__(self):
         return (f'{self.text[:20]} '
