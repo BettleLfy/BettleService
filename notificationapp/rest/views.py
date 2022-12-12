@@ -6,6 +6,7 @@ from django.utils import timezone
 from taskqueue.tasks import notify_texting_list
 
 from .models import TextingList, Client, Message
+from .redis import task_id_cache
 from .serializers import (TextingListSerializer,
                           ClientSerializer,
                           MessageSerializer)
@@ -40,10 +41,11 @@ class TextingListViewSet(ModelViewSet):
         super().perform_create(serializer)
         instance = serializer.instance
         if instance.start_datetime < timezone.now():
-            notify_texting_list.delay(instance.id)
+            task = notify_texting_list.delay(instance.id)
         else:
-            notify_texting_list.apply_async(args=[instance.id],
-                                            eta=instance.start_datetime)
+            task = notify_texting_list.apply_async(args=[instance.id],
+                                                   eta=instance.start_datetime)
+        task_id_cache.set(instance.id, task.id)
 
 
 class ClientViewSet(ModelViewSet):

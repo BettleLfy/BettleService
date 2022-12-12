@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
-from dateutil.parser import parse
+# from dateutil.parser import parse
 
 from .models import TextingList, Client, Message
 
