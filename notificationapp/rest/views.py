@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.db.models import Count
 from django.utils import timezone
 from taskqueue.tasks import notify_texting_list
+from notificationapp import celery_app
 
 from .models import TextingList, Client, Message
 from .redis import task_id_cache
@@ -37,15 +38,27 @@ class TextingListViewSet(ModelViewSet):
         result = self.calculate_statistics(self.get_object().messages.all())
         return Response(result)
 
-    def perform_create(self, serializer):
-        super().perform_create(serializer)
-        instance = serializer.instance
+    def start_task(self, texting_list):
+        instance = texting_list
         if instance.start_datetime < timezone.now():
             task = notify_texting_list.delay(instance.id)
         else:
             task = notify_texting_list.apply_async(args=[instance.id],
                                                    eta=instance.start_datetime)
         task_id_cache.set(instance.id, task.id)
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        self.start_task(serializer.instance)
+
+    def perform_update(self, serializer):
+        start_datetime = serializer.instance.start_datetime
+        super().perform_update(serializer)
+        instance = serializer.instance
+        if start_datetime > timezone.now():
+            task_id = task_id_cache.get(instance.id)
+            celery_app.control.revoke(task_id, terminate=True)
+            self.start_task(serializer.instance)
 
 
 class ClientViewSet(ModelViewSet):

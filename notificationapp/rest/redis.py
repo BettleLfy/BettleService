@@ -12,7 +12,7 @@ class TaskIdCache:
         r.set(self.KEY_FORMAT.format(texting_list_id), f'{task_id}')
 
     def get(self, texting_list_id):
-        r.get(self.KEY_FORMAT.format(texting_list_id))
+        return r.get(self.KEY_FORMAT.format(texting_list_id)).decode()
 
     def delete(self, texting_list_id):
         r.delete(self.KEY_FORMAT.format(texting_list_id))
