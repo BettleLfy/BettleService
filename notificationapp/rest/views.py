@@ -1,22 +1,14 @@
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from django.db.models import Count
-from notificationapp.celery import debug_task
-from datetime import datetime, timedelta
+from django.utils import timezone
+from taskqueue.tasks import notify_texting_list
 
 from .models import TextingList, Client, Message
 from .serializers import (TextingListSerializer,
                           ClientSerializer,
                           MessageSerializer)
-
-
-class Test(APIView):
-    def post(self, request):
-        tomorrow = datetime.utcnow() + timedelta(seconds=20)
-        debug_task.apply_async(eta=tomorrow)
-        return Response({'vanya': 'popa'})
 
 
 class TextingListViewSet(ModelViewSet):
@@ -43,6 +35,15 @@ class TextingListViewSet(ModelViewSet):
     def statistics_detail(self, request, pk):
         result = self.calculate_statistics(self.get_object().messages.all())
         return Response(result)
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        instance = serializer.instance
+        if instance.start_datetime < timezone.now():
+            notify_texting_list.delay(instance.id)
+        else:
+            notify_texting_list.apply_async(args=[instance.id],
+                                            eta=instance.start_datetime)
 
 
 class ClientViewSet(ModelViewSet):

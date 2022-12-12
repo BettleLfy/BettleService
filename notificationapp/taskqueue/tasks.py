@@ -1,4 +1,4 @@
-from datetime import datetime
+from django.utils import timezone
 
 from celery import shared_task
 from rest.models import Client, Message, TextingList
@@ -13,14 +13,14 @@ def notify_texting_list(texting_list_id):
     if texting_list.filter_operator_code is not None:
         clients = clients.filter(
             operator_code=texting_list.filter_operator_code)
-    if not texting_list.filter_tag.empty():
+    if texting_list.filter_tag != '':
         clients = clients.filter(
             tag=texting_list.filter_tag)
     for client in clients:
-        if datetime.now() > get_texting_list_end(texting_list_id):
+        if timezone.now() > get_texting_list_end(texting_list_id):
             raise Exception('Message list has been ended prematurely')
         message = Message.objects.create(
-            texting_list=texting_list,
+            textinglist=texting_list,
             client=client,
             status=Message.PENDING
         )
@@ -30,4 +30,4 @@ def notify_texting_list(texting_list_id):
 
 
 def get_texting_list_end(texting_list_id):
-    return TextingList.object.get(pk=texting_list_id).end_datetime
+    return TextingList.objects.get(pk=texting_list_id).end_datetime
