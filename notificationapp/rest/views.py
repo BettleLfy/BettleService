@@ -7,7 +7,7 @@ from taskqueue.tasks import notify_texting_list
 from notificationapp import celery_app
 
 from .models import TextingList, Client, Message
-from .redis import task_id_cache
+from .redis import end_datetime_cache, task_id_cache
 from .serializers import (TextingListSerializer,
                           ClientSerializer,
                           MessageSerializer)
@@ -49,16 +49,21 @@ class TextingListViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         super().perform_create(serializer)
-        self.start_task(serializer.instance)
+        instance = serializer.instance
+        end_datetime_cache.set(instance.id, instance.end_datetime)
+        self.start_task(instance)
 
     def perform_update(self, serializer):
-        start_datetime = serializer.instance.start_datetime
-        super().perform_update(serializer)
         instance = serializer.instance
+        start_datetime = instance.start_datetime
+        end_datetime = instance.end_datetime
+        super().perform_update(serializer)
+        if end_datetime != instance.end_datetime:
+            end_datetime_cache.set(instance.id, instance.end_datetime)
         if start_datetime > timezone.now():
             task_id = task_id_cache.get(instance.id)
             celery_app.control.revoke(task_id, terminate=True)
-            self.start_task(serializer.instance)
+            self.start_task(instance)
 
 
 class ClientViewSet(ModelViewSet):

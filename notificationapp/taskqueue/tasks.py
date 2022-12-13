@@ -1,10 +1,10 @@
 from django.utils import timezone
 
 from celery import shared_task
-from rest.models import Client, Message, TextingList
 
+from rest.models import Client, Message, TextingList
 from .notification import notify_client
-from rest.redis import task_id_cache
+from rest.redis import end_datetime_cache, task_id_cache
 
 
 @shared_task
@@ -31,7 +31,8 @@ def notify_texting_list(texting_list_id):
             message.save()
     finally:
         task_id_cache.delete(texting_list_id)
+        end_datetime_cache.delete(texting_list_id)
 
 
 def get_texting_list_end(texting_list_id):
-    return TextingList.objects.get(pk=texting_list_id).end_datetime
+    return end_datetime_cache.get(texting_list_id)
