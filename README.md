@@ -31,3 +31,6 @@
 - Создать тестового Client
 - При создании TextingList указать валидные текст, тег и код оператора и указать корректные даты
 - Если все сделано правильно в терминале Celery запустится сделанный вами task и во вкладе Message на странице localhost появится ваше сообщение
+
+## Ссылка на Swagger:
+- [Swagger](https://app.swaggerhub.com/apis/EASYFRAG4905/BettleService/1.0.0#/)
